@@ -1,0 +1,52 @@
+﻿@using CCCSoftware.Produktion.EPVI.Common.Mvc.Html
+@using EPVIWeb.Areas.Charts.Models
+@using EPVIWeb.Properties
+
+@model ChartViewModel
+
+@{
+    bool multipleBlocks = Model.TimelinesOrDefault.Count > 1;
+    string chartBlockClass = "chart-block";
+    string chartBlockMultiClass = "chart-block chart-block-multi";
+}
+
+<div class="charts fill"
+     data-chart-chartid="@Model.ChartConfigId"
+     data-chart-resources="@Model.GetResourceStrings()">
+    @{ int blockIdx = 0; }
+    @foreach (var timeline in Model.TimelinesOrDefault)
+    {
+        if (multipleBlocks)
+        {
+            if (blockIdx == 0)
+            {
+                chartBlockClass = chartBlockMultiClass + " chart-block-multi-first";
+            }
+            else
+            {
+                chartBlockClass = chartBlockMultiClass + " chart-block-multi-second";
+            }
+        }
+        <div class="@chartBlockClass">
+            <div class="chart-block-buttons">
+                @* Button zum Schliessen des Chart-Blocks bei der synchronisierten Anzeige *@
+                @Html.WidgetButton(Url.Content("~/Content/Icons/remove.png"), Resources.ToolTipRemove, new { @class = "chart-block-close" })
+            </div>
+
+            @Html.Partial("_Timeline", timeline)
+
+            @* chart-block-body hat ggf. vertikale Scrollbar
+                chart-block-body-contents wird per JavaScript so breit gemacht, wie die aeussere Breite von chart-block-body (nicht die innter Breite 100%)
+                Auf diese Weise wird vermieden, dass beim Einblenden der vertikalen Scrollbar alles nach links rutscht.  *@
+            <div class="chart-block-body">
+                <div class="chart-block-body-contents">
+                    <div class="chart-areas">
+                        @Html.DisplayFor(m => m.Areas)
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        blockIdx++;
+    }
+</div>

@@ -1,0 +1,127 @@
+﻿@using CCCSoftware.Produktion.EPVI.Common.Mvc.Html
+@using CCCSoftware.Produktion.EPVI.Common.Security
+@using CCCSoftware.Produktion.EPVI.Data.Codes
+@using EPVIWeb.Properties
+@using EPVIWeb.Areas.Charts.Models
+@model ChartViewModel
+
+
+@{
+    ViewBag.Title = Resources.TitleChart;
+}
+
+@section Styles {
+    @Styles.Render("~/Content/css/ChartBundle")
+    @Styles.Render("~/Content/css/jquerymultiselect")
+}
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jquerymousewheel")
+    @Scripts.Render("~/bundles/jquerymultiselect")
+    @Scripts.Render("~/bundles/raphael")
+    @Scripts.Render("~/bundles/drawing/barchart")
+    @Scripts.Render("~/bundles/charts")
+}
+
+@section maintools {
+    @Html.ImageButton(Url.Content("~/Content/Icons/clock.png"), Resources.ButtonChartTimes, new { id = "chart-button-times" })
+    @Html.ImageButton(Url.Content("~/Content/Icons/reset-time.png"), "Zoom zurücksetzen", new { id = "chart-button-revert-zoom" })
+    @Html.ImageButton(Url.Content("~/Content/Icons/find.png"), Resources.ButtonChartFind, new { id = "chart-button-find" })
+    @Html.ImageButton(Url.Content("~/Content/Icons/config.png"), Resources.ButtonChartConfig, Permission.Write(ActivityCode.ChartConfig), new { id = "chart-button-config" })
+
+    @Html.ImageButton(Url.Content("~/Content/Icons/add-timeline.png"), Resources.ButtonChartAddBlock, new { id = "chart-button-add-block", @class = "button-sep" })
+    @Html.ImageButton(Url.Content("~/Content/Icons/remove-timeline.png"), Resources.ButtonChartRemoveBlock, new { id = "chart-button-remove-block", @class = "button-sep" })
+    @Html.ImageButton(Url.Content("~/Content/Icons/anchor.png"), Resources.ButtonChartAnchor, new { id = "chart-button-anchor" })
+    @Html.ImageButton(Url.Content("~/Content/Icons/sync.png"), Resources.ButtonChartSync, new { id = "chart-button-sync" })
+
+    @Html.ImageButton(Url.Content("~/Content/Icons/info.png"), Resources.ButtonInfo, new { id = "showSelInfoButton", @class = "button-sep" })
+
+    <select title="Select Option" name="optionselector" size="10">
+        <optgroup label="Single Graphs">
+            <option value="Original" title="Original"  selected="selected">Original</option>
+            <option value="Envelope" title="SWHK" >SWHK</option>
+            <option value="Normalized" title="Normalized">Normalized</option>
+            <option value="UpperBound" title="Upper Bound">Upper Bound</option>
+            <option value="LowerBound" title="Lower Bound">Lower Bound</option>
+        </optgroup>
+        <optgroup label="Multiple Graphs">
+            <option value="AverageGraph" title="Avergae Graph">Avergae Graph</option>
+            <option value="AvgEnvelope" title="Avg Swhk">Avg Swhk</option>
+            <option value="LowerAverage" title="Lower Average">Lower Average</option>
+            <option value="UpperAverage" title="Upper Average">Upper Average</option>
+        </optgroup>
+    </select>
+
+    <select title="Select Functions" multiple="multiple" name="funcselector" size="10">
+    @{
+
+        var jsonstring = EPVIWeb.PredictiveFunctions.WSConnection.GetAvailableIds();
+        Dictionary<string, string> processes = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonstring);
+
+
+        foreach (KeyValuePair<string, string> param in processes)
+        { 
+            <option value="@param.Key" title="@param.Value">@param.Value</option>
+        }
+    }
+    </select>
+    
+
+    @Html.ImageButton(Url.Content("~/Content/Icons/sync.png"), Resources.ButtonChartSync, new { id = "func-select-button" })
+
+
+@*	<select title="Select Parameters" multiple="multiple" name="paramselector" size="10" data-fromInput="true" data-toInput="true">
+    @{
+        var paramstring = EPVIWeb.PredictiveFunctions.WSConnection.GetAvailableParams();
+        Dictionary<string, string> paramms = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(paramstring);
+        foreach (KeyValuePair<string, string> param in paramms)
+        { 
+            <option title="@param.Key" value="@param.Value" data-fromInput="true" data-toInput="true">@param.Key</option>
+        }
+    }
+	</select>
+
+    @Html.ImageButton(Url.Content("~/Content/Icons/find.png"), Resources.ButtonChartSync, new { id = "find-by-params-button" })
+
+    <select title="Select Functions2" multiple="multiple" name="funcselector2" size="10">
+    @{
+        foreach (KeyValuePair<string, string> param in EPVIWeb.Areas.Charts.Controllers.ChartController.AvailableIds)
+        { 
+            <option value="@param.Key" title="@param.Value" >@param.Value</option>
+        }
+    }
+    </select>
+
+    @Html.ImageButton(Url.Content("~/Content/Icons/sync.png"), Resources.ButtonChartSync, new { id = "func-select-button2" })*@
+
+    <select title="Select Group" name="groupselector" size="10">
+    @{
+        Dictionary<string, List<Tuple<object, string>>> enums = null;
+        EPVIWeb.Areas.Charts.Controllers.ChartController.ParameterGroups.TryGetValue(EPVIWeb.PredictiveFunctions.ParamType.Enum, out enums);
+        foreach (KeyValuePair<string, List<Tuple<object, string>>> param in enums.OrderBy(x => x.Value.Count()))
+        {
+            <optgroup label= "@param.Key">
+                @foreach (var p in param.Value.OrderBy(x => x))
+                {
+                    if (p.Item1 != null)
+                    { 
+                        <option value="@param.Key" title="@p.Item1" >@p.Item1</option>
+                    }
+                }
+            </optgroup>
+        }
+    }
+    </select>
+
+    @Html.ImageButton(Url.Content("~/Content/Icons/sync.png"), Resources.ButtonChartSync, new { id = "group-select-button" })
+}
+
+<div class="fill no-scroll">
+    @Html.Partial("_Charts")
+</div>
+
+<div class="chart-dialogs" style="display: none;">
+    @Html.Partial("_SelectTimes")   
+</div>
+
+<div id="dlgPlaceholder" style="display: none" />
